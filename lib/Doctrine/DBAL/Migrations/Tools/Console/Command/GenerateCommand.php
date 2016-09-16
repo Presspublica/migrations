@@ -90,12 +90,12 @@ EOT
         parent::configure();
     }
 
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output, $namespace = null, $path = null)
     {
         $configuration = $this->getMigrationConfiguration($input, $output);
 
         $version = $configuration->generateVersionNumber();
-        $path = $this->generateMigration($configuration, $input, $version);
+        $path = $this->generateMigration($configuration, $input, $version, null, null, $path, $namespace);
 
         $output->writeln(sprintf('Generated new migration class to "<info>%s</info>"', $path));
     }
@@ -105,7 +105,7 @@ EOT
         return self::$_template;
     }
 
-    protected function generateMigration(Configuration $configuration, InputInterface $input, $version, $up = null, $down = null)
+    protected function generateMigration(Configuration $configuration, InputInterface $input, $version, $up = null, $down = null, $dir = null, $namespace = null)
     {
         $placeHolders = [
             '<namespace>',
@@ -114,7 +114,7 @@ EOT
             '<down>',
         ];
         $replacements = [
-            $configuration->getMigrationsNamespace(),
+            $namespace ?: $configuration->getMigrationsNamespace(),
             $version,
             $up ? "        " . implode("\n        ", explode("\n", $up)) : null,
             $down ? "        " . implode("\n        ", explode("\n", $down)) : null
@@ -122,8 +122,12 @@ EOT
         $code = str_replace($placeHolders, $replacements, $this->getTemplate());
         $code = preg_replace('/^ +$/m', '', $code);
         $migrationDirectoryHelper = new MigrationDirectoryHelper($configuration);
-        $dir = $migrationDirectoryHelper->getMigrationDirectory();
+        $dir = $dir ?: $migrationDirectoryHelper->getMigrationDirectory();
         $path = $dir . '/Version' . $version . '.php';
+
+        if (!file_exists($dir)) {
+            mkdir($dir);
+        }
 
         file_put_contents($path, $code);
 

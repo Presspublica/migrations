@@ -72,7 +72,7 @@ EOT
         ;
     }
 
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output, $namespace = null, $path = null)
     {
         $isDbalOld = (DbalVersion::compare('2.2.0') > 0);
         $configuration = $this->getMigrationConfiguration($input, $output);
@@ -90,7 +90,7 @@ EOT
         }
 
         $fromSchema = $conn->getSchemaManager()->createSchema();
-        $toSchema = $this->getSchemaProvider()->createSchema();
+        $toSchema = $this->getSchemaProvider()->createSchema($namespace);
 
         //Not using value from options, because filters can be set from config.yml
         if ( ! $isDbalOld && $filterExpr = $conn->getConfiguration()->getFilterSchemaAssetsExpression()) {
@@ -122,7 +122,7 @@ EOT
         }
 
         $version = $configuration->generateVersionNumber();
-        $path = $this->generateMigration($configuration, $input, $version, $up, $down);
+        $path = $this->generateMigration($configuration, $input, $version, $up, $down, $path, $namespace . "\\DoctrineMigrations");
 
         $output->writeln(sprintf('Generated new migration class to "<info>%s</info>" from schema differences.', $path));
     }

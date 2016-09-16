@@ -19,6 +19,7 @@
 
 namespace Doctrine\DBAL\Migrations\Provider;
 
+use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -50,9 +51,18 @@ final class OrmSchemaProvider implements SchemaProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function createSchema()
+    public function createSchema($namespaceFilter = null)
     {
         $metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
+
+        if ($namespaceFilter !== null) {
+            $metadata = array_filter($metadata, function(ClassMetadata $meta) use ($namespaceFilter) {
+                $classNamespace = $meta->getReflectionClass()->getNamespaceName();
+
+                return strpos($classNamespace, $namespaceFilter) !== false;
+            });
+        }
+
         if (empty($metadata)) {
             throw new \UnexpectedValueException('No mapping information to process');
         }
