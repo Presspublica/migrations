@@ -55,14 +55,6 @@ final class OrmSchemaProvider implements SchemaProviderInterface
     {
         $metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
 
-        if ($namespaceFilter !== null) {
-            $metadata = array_filter($metadata, function(ClassMetadata $meta) use ($namespaceFilter) {
-                $classNamespace = $meta->getReflectionClass()->getNamespaceName();
-
-                return strpos($classNamespace, $namespaceFilter) !== false;
-            });
-        }
-
         if (empty($metadata)) {
             throw new \UnexpectedValueException('No mapping information to process');
         }
