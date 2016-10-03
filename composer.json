@@ -1,5 +1,5 @@
 {
-    "name": "doctrine/migrations",
+    "name": "presspublica/migrations",
     "type": "library",
     "description": "Database Schema migrations using Doctrine DBAL",
     "keywords": ["migrations", "database"],
