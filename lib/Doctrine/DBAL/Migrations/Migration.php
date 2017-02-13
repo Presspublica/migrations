@@ -172,6 +172,7 @@ class Migration
 
         $sql = [];
         $time = 0;
+
         foreach ($migrationsToExecute as $version) {
             $versionSql = $version->execute($direction, $dryRun, $timeAllQueries);
             $sql[$version->getVersion()] = $versionSql;

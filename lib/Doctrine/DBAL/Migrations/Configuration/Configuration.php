@@ -415,7 +415,6 @@ class Configuration
         }
         $version = new Version($this, $version, $class);
         $this->migrations[$version->getVersion()] = $version;
-        ksort($this->migrations, SORT_STRING);
 
         return $version;
     }
@@ -569,10 +568,22 @@ class Configuration
             $this->migrationsColumnName, $this->migrationsTableName, $where, $this->migrationsColumnName
         );
 
-        $sql = $this->connection->getDatabasePlatform()->modifyLimitQuery($sql, 1);
-        $result = $this->connection->fetchColumn($sql);
+        $rows = $this->connection->fetchAll($sql);
 
-        return $result !== false ? (string) $result : '0';
+        if (count($rows) === 0) {
+            return '0';
+        }
+
+        $migrations = array_map(function($row) {return $row['version'];}, $rows);
+
+        usort($migrations, function($val1, $val2) {
+            $date1 = intval(preg_replace('/[^\d]/', '', $val1));
+            $date2 = intval(preg_replace('/[^\d]/', '', $val2));
+
+            return $date1 - $date2;
+        });
+
+        return array_pop($migrations);
     }
 
     /**
@@ -763,6 +774,7 @@ class Configuration
         } else {
             $allVersions = $this->migrations;
         }
+
         $versions = [];
         $migrated = $this->getMigratedVersions();
         foreach ($allVersions as $version) {
@@ -870,7 +882,10 @@ class Configuration
                 return false;
             }
 
-            return $version->getVersion() > $to;
+            $toPos = array_search($to, array_keys($this->migrations));
+            $currPos = array_search($version, array_values($this->migrations));
+
+            return $currPos > $toPos;
         }
 
         if ($direction === Version::DIRECTION_UP) {
@@ -878,7 +893,10 @@ class Configuration
                 return false;
             }
 
-            return $version->getVersion() <= $to;
+            $toPos = array_search($to, array_keys($this->migrations));
+            $currPos = array_search($version, array_values($this->migrations));
+
+            return $currPos <= $toPos;
         }
     }
 
