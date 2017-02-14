@@ -144,7 +144,10 @@ class Migration
             throw MigrationException::unknownMigrationVersion($to);
         }
 
-        $direction = $from > $to ? Version::DIRECTION_DOWN : Version::DIRECTION_UP;
+        $fromPos = array_search($from, array_values($migrations));
+        $toPos = array_search($to, array_values($migrations));
+
+        $direction = $fromPos > $toPos ? Version::DIRECTION_DOWN : Version::DIRECTION_UP;
         $migrationsToExecute = $this->configuration->getMigrationsToExecute($direction, $to);
 
         /**
